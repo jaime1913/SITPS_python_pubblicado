@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Paraderos del SITP</title>
+
+
+    <!-- Leaflet -->
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+        }
+
+
+        .contenedor {
+            width: 95%;
+            max-width: 1300px;
+            margin: 30px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+        }
+
+
+        h1 {
+            text-align: center;
+            color: #1565C0;
+            margin-bottom: 25px;
+        }
+
+
+        .informacion {
+            background-color: #e8f5e9;
+            border-left: 5px solid #2E7D32;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border-radius: 5px;
+        }
+
+
+        .informacion p {
+            margin: 6px 0;
+            font-size: 17px;
+        }
+
+
+        /* BUSCADOR */
+
+        .buscador {
+            margin-bottom: 25px;
+        }
+
+
+        .buscador label {
+            display: block;
+            font-weight: bold;
+            font-size: 17px;
+            margin-bottom: 8px;
+        }
+
+
+        .buscador input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+
+        .buscador input:focus {
+            outline: none;
+            border-color: #1565C0;
+        }
+
+
+        /* TITULOS */
+
+        .titulo {
+            color: #2E7D32;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+
+        /* MAPA */
+
+        #mapa {
+            width: 100%;
+            height: 300px;
+            margin-bottom: 25px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+
+        /* TABLA */
+
+        .tabla-contenedor {
+            overflow-x: auto;
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+
+        th {
+            background-color: #1565C0;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+
+        tr:nth-child(even) {
+            background-color: #f5f5f5;
+        }
+
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+
+        /* SIN RESULTADOS */
+
+        .sin-resultados {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            display: none;
+        }
+
+
+        /* BOTÓN VOLVER */
+
+        .volver {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 12px 20px;
+            background-color: #2E7D32;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+
+        .volver:hover {
+            background-color: #1B5E20;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="contenedor">
+
+
+    <!-- TÍTULO -->
+
+    <h1>
+        Consulta de Paraderos SITP
+    </h1>
+
+
+    <!-- INFORMACIÓN -->
+
+    <div class="informacion">
+
+        <p>
+            <strong>Localidad consultada:</strong>
+            {{ localidad }}
+        </p>
+
+
+        <p>
+            <strong>Total de paraderos encontrados:</strong>
+            <span id="totalOriginal">
+                {{ total }}
+            </span>
+        </p>
+
+
+        <p>
+            <strong>Resultados mostrados:</strong>
+            <span id="totalFiltrado">
+                {{ total }}
+            </span>
+        </p>
+
+    </div>
+
+
+    <!-- BUSCADOR -->
+
+    <div class="buscador">
+
+        <label for="busqueda">
+            Buscar paradero:
+        </label>
+
+
+        <input
+            type="text"
+            id="busqueda"
+            placeholder="Escriba código, nombre o dirección..."
+        >
+
+    </div>
+
+
+    <!-- MAPA -->
+
+    <h2 class="titulo">
+        Mapa de paraderos
+    </h2>
+
+
+    <div id="mapa"></div>
+
+
+    <!-- TABLA -->
+
+    <h2 class="titulo">
+        Paraderos del SITP
+    </h2>
+
+
+    <div class="tabla-contenedor">
+
+        <table id="tablaParaderos">
+
+            <thead>
+
+                <tr>
+
+                    <th>Código</th>
+
+                    <th>Nombre</th>
+
+                    <th>Dirección</th>
+
+                    <th>Localidad</th>
+
+                    <th>Latitud</th>
+
+                    <th>Longitud</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for paradero in paraderos %}
+
+                <tr class="fila-paradero">
+
+                    <td>
+                        {{ paradero.codigo }}
+                    </td>
+
+                    <td>
+                        {{ paradero.nombre }}
+                    </td>
+
+                    <td>
+                        {{ paradero.direccion }}
+                    </td>
+
+                    <td>
+                        {{ paradero.localidad }}
+                    </td>
+
+                    <td>
+                        {{ paradero.latitud }}
+                    </td>
+
+                    <td>
+                        {{ paradero.longitud }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- MENSAJE SIN RESULTADOS -->
+
+    <div
+        id="sinResultados"
+        class="sin-resultados"
+    >
+        No se encontraron paraderos con ese criterio de búsqueda.
+    </div>
+
+
+    <!-- VOLVER -->
+
+    <a
+        href="/"
+        class="volver"
+    >
+        ← Volver a consultar
+    </a>
+
+
+</div>
+
+
+<!-- LEAFLET -->
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script>
+
+    /*
+     * CREAR MAPA
+     */
+
+    const mapa = L.map("mapa").setView(
+        [4.65, -74.10],
+        11
+    );
+
+
+    /*
+     * MAPA BASE DE OPENSTREETMAP
+     *
+     * No necesita API Key.
+     */
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            attribution:
+                "&copy; OpenStreetMap contributors"
+        }
+    ).addTo(mapa);
+
+
+    /*
+     * BOUNDS
+     *
+     * Sirve para que el mapa se ajuste
+     * automáticamente a los paraderos.
+     */
+
+    const limites = L.latLngBounds([]);
+
+
+    /*
+     * OBTENER LAS FILAS DE LA TABLA
+     */
+
+    const filas = document.querySelectorAll(
+        ".fila-paradero"
+    );
+
+
+    /*
+     * CREAR MARCADORES
+     */
+
+    filas.forEach(function(fila) {
+
+        const celdas =
+            fila.querySelectorAll("td");
+
+
+        if (celdas.length >= 6) {
+
+            const codigo =
+                celdas[0].textContent.trim();
+
+
+            const nombre =
+                celdas[1].textContent.trim();
+
+
+            const direccion =
+                celdas[2].textContent.trim();
+
+
+            const latitud =
+                parseFloat(
+                    celdas[4].textContent.trim()
+                );
+
+
+            const longitud =
+                parseFloat(
+                    celdas[5].textContent.trim()
+                );
+
+
+            /*
+             * Verificar coordenadas
+             */
+
+            if (
+                !isNaN(latitud) &&
+                !isNaN(longitud)
+            ) {
+
+                /*
+                 * Agregar coordenada
+                 * a los límites del mapa
+                 */
+
+                limites.extend([
+                    latitud,
+                    longitud
+                ]);
+
+
+                /*
+                 * Crear marcador
+                 */
+
+                const marcador =
+                    L.marker([
+                        latitud,
+                        longitud
+                    ]).addTo(mapa);
+
+
+                /*
+                 * Información del marcador
+                 */
+
+                marcador.bindPopup(
+
+                    "<strong>Código:</strong> " +
+                    codigo +
+                    "<br>" +
+
+                    "<strong>Nombre:</strong> " +
+                    nombre +
+                    "<br>" +
+
+                    "<strong>Dirección:</strong> " +
+                    direccion
+
+                );
+
+            }
+
+        }
+
+    });
+
+
+    /*
+     * CENTRAR MAPA
+     */
+
+    if (limites.isValid()) {
+
+        mapa.fitBounds(
+            limites,
+            {
+                padding: [30, 30]
+            }
+        );
+
+    }
+
+
+    /*
+     * BUSCADOR
+     */
+
+    const buscador =
+        document.getElementById(
+            "busqueda"
+        );
+
+
+    buscador.addEventListener(
+        "keyup",
+        function() {
+
+            const texto =
+                buscador.value
+                .toLowerCase()
+                .trim();
+
+
+            const filasTabla =
+                document.querySelectorAll(
+                    ".fila-paradero"
+                );
+
+
+            let encontrados = 0;
+
+
+            filasTabla.forEach(
+                function(fila) {
+
+                    const contenido =
+                        fila.textContent
+                        .toLowerCase();
+
+
+                    if (
+                        contenido.includes(texto)
+                    ) {
+
+                        fila.style.display = "";
+
+                        encontrados++;
+
+                    } else {
+
+                        fila.style.display = "none";
+
+                    }
+
+                }
+            );
+
+
+            /*
+             * Actualizar contador
+             */
+
+            document.getElementById(
+                "totalFiltrado"
+            ).textContent =
+                encontrados;
+
+
+            /*
+             * Mostrar u ocultar mensaje
+             */
+
+            const mensaje =
+                document.getElementById(
+                    "sinResultados"
+                );
+
+
+            if (encontrados === 0) {
+
+                mensaje.style.display =
+                    "block";
+
+            } else {
+
+                mensaje.style.display =
+                    "none";
+
+            }
+
+        }
+    );
+
+</script>
+
+
+</body>
+
+</html>
